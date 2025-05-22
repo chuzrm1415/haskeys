@@ -1,0 +1,39 @@
+# Archivos y directorios comunes
+/dist-newstyle/
+/dist/
+/.cabal-sandbox/
+/cabal.sandbox.config
+.stack-work/
+.cabal/
+/.hsenv/
+
+# Stack
+.stack-work/
+.stack-dot-lock
+*.stack-work.log
+
+# Archivos de configuración locales
+*.iml
+*.hie
+*.hie-db
+*.hi
+*.o
+*.hi-boot
+*.o-boot
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Archivos de GHCi
+.ghci
+.ghc.environment.*
+
+# Archivos de editor
+*.swp
+*~
+*.swo
+.DS_Store
+
+# VS Code
+.vscode/
