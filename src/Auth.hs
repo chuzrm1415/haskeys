@@ -1,31 +1,32 @@
-{-# LANGUAGE DeriveGeneric #-}
+--{-# LANGUAGE DeriveGeneric #-}
 
 module Auth (
     registerUser,
     checkPIN
 ) where
 
-import Crypto.Hash (Digest, SHA256, hash)
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Base16 as B16
+import Crypto.Hash (Digest, SHA256, hash)
+import Crypto.Random (getRandomBytes)
 import System.Directory (doesFileExist)
-import GHC.Generics (Generic)
-import Data.Binary
+import Data.Binary (decodeFile, encodeFile)
 import Data.List (lookup)
-import qualified Data.List as List
 
 type User = String
 type HashPIN = BS.ByteString
-type DBusers = [(User, HashPIN)]
+type Salt = BS.ByteString
+type DBusers = [(User, HashPIN, Salt)]
 
 userPathDB :: FilePath
 userPathDB = "data/users.bin"
 
--- Hashea un PIN usando SHA256
-hashPIN :: String -> BS.ByteString
-hashPIN pin =
-    let digest = hash (BS.pack pin) :: Digest SHA256
-    in B16.encode (BS.pack (show digest))
+-- Hashea un PIN usando SHA256 y un salt
+hashPIN :: String -> Salt -> BS.ByteString
+hashPIN pin salt =
+    let digest = hash (BSC.pack pin <> salt) :: Digest SHA256
+    in B16.encode (BSC.pack (show digest))
 
 -- Cargar los usuarios desde archivo binario
 loadUsers :: IO DBusers
@@ -43,10 +44,12 @@ saveUsers = encodeFile userPathDB
 registerUser :: User -> String -> IO ()
 registerUser user pin = do
     db <- loadUsers
-    if any ((== user) . fst) db
+    if any (\(u,_,_) -> u == user) db
         then putStrLn "El usuario ya existe."
         else do
-            let newUser = (user, hashPIN pin)
+            salt <- getRandomBytes 16
+            let hash = hashPIN pin salt
+            let newUser = (user, hash, salt)
             saveUsers (newUser : db)
             putStrLn "Usuario registrado correctamente."
 
@@ -54,8 +57,8 @@ registerUser user pin = do
 checkPIN :: User -> String -> IO Bool
 checkPIN user pin = do
     db <- loadUsers
-    case lookup user db of
+    case lookup user [(u, (h, s)) | (u, h, s) <- db] of
         Nothing -> do
             putStrLn "Usuario no encontrado."
             return False
-        Just savedHash -> return (savedHash == hashPIN pin)
+        Just (savedHash, salt) -> return (savedHash == hashPIN pin salt)
