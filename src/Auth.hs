@@ -2,7 +2,8 @@
 
 module Auth (
     registerUser,
-    checkPIN
+    checkPIN,
+    getUserSalt
 ) where
 
 import qualified Data.ByteString as BS
@@ -62,3 +63,9 @@ checkPIN user pin = do
             putStrLn "Usuario no encontrado."
             return False
         Just (savedHash, salt) -> return (savedHash == hashPIN pin salt)
+
+-- Devuelve el salt del usuario si existe
+getUserSalt :: User -> IO (Maybe Salt)
+getUserSalt user = do
+    db <- loadUsers
+    return $ lookup user [(u, s) | (u, _, s) <- db]
