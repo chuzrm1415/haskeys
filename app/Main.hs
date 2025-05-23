@@ -53,7 +53,7 @@ verification = do
 
 userMenu :: String -> BS.ByteString -> IO ()
 userMenu user userKey = do
-    putStrLn "¿Qué querés hacer? (1: Agregar contraseña, 2: Ver contraseñas, 3: Salir)"
+    putStrLn "¿Qué querés hacer? (1: Agregar contraseña, 2: Ver contraseñas, 3: Modificar contraseña, 4: Eliminar contraseña, 5: Salir)"
     opcion <- getLine
     case opcion of
         "1" -> do
@@ -62,7 +62,13 @@ userMenu user userKey = do
         "2" -> do
             showPasswords user userKey
             userMenu user userKey
-        "3" -> putStrLn "Saliendo del programa."
+        "3" -> do
+            editPassword user userKey
+            userMenu user userKey
+        "4" -> do
+            deletePassword user userKey
+            userMenu user userKey
+        "5" -> putStrLn "Saliendo del programa."
         _   -> do
             putStrLn "Opción no válida"
             userMenu user userKey
